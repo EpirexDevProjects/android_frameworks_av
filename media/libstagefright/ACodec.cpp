@@ -785,11 +785,16 @@ status_t ACodec::allocateBuffersOnPort(OMX_U32 portIndex) {
 
     status_t err;
     if (mNativeWindow != NULL && portIndex == kPortIndexOutput) {
+#ifdef STE_HARDWARE
+	/* Fix video streaming */
+	err = allocateOutputBuffersFromNativeWindow();
+#else
         if (storingMetadataInDecodedBuffers()) {
             err = allocateOutputMetadataBuffers();
         } else {
             err = allocateOutputBuffersFromNativeWindow();
         }
+#endif
     } else {
         OMX_PARAM_PORTDEFINITIONTYPE def;
         InitOMXParams(&def);
@@ -947,7 +952,11 @@ status_t ACodec::setupNativeWindowSizeFormatAndUsage(
 #ifdef USE_SAMSUNG_COLORFORMAT
             eNativeColorFormat,
 #else
+#ifdef STE_HARDWARE
+            OMXCodec::OmxToHALFormat(def.format.video.eColorFormat),
+#else
             def.format.video.eColorFormat,
+#endif
 #endif
             mRotationDegrees,
             usage);
@@ -1035,7 +1044,11 @@ status_t ACodec::configureOutputBuffersFromNativeWindow(
     // This check was present in KitKat.
     if (def.nBufferCountActual < def.nBufferCountMin + *minUndequeuedBuffers) {
 #endif
+#ifdef STE_HARDWARE
+    for (OMX_U32 extraBuffers = 1; /* condition inside loop */; extraBuffers--) {
+#else
     for (OMX_U32 extraBuffers = 2 + 1; /* condition inside loop */; extraBuffers--) {
+#endif
         OMX_U32 newBufferCount =
             def.nBufferCountMin + *minUndequeuedBuffers + extraBuffers;
         def.nBufferCountActual = newBufferCount;
@@ -5351,7 +5364,7 @@ bool ACodec::BaseState::onOMXFillBufferDone(
                 mCodec->mSkipCutBuffer->submit(info->mData);
             }
             info->mData->meta()->setInt64("timeUs", timeUs);
-            info->mData->meta()->setObject("graphic-buffer", info->mGraphicBuffer);
+            //info->mData->meta()->setObject("graphic-buffer", (android::RefBase*)&info->mGraphicBuffer);
 
             sp<AMessage> notify = mCodec->mNotify->dup();
             notify->setInt32("what", CodecBase::kWhatDrainThisBuffer);

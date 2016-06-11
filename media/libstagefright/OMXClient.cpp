@@ -266,7 +266,18 @@ status_t MuxOMX::sendCommand(
 status_t MuxOMX::getParameter(
         node_id node, OMX_INDEXTYPE index,
         void *params, size_t size) {
-    return getOMX(node)->getParameter(node, index, params, size);
+#ifdef STE_HARDWARE
+	/* Fix getSupportedProfileLevel */
+	if(index == OMX_IndexParamVideoProfileLevelQuerySupported){
+		OMX_VIDEO_PARAM_PROFILELEVELTYPE *pt = (OMX_VIDEO_PARAM_PROFILELEVELTYPE *)params;
+		ALOGI("Meticulus: eProfile=%u eLevel=%u nProfileIndex=%u\n",pt->eProfile, pt->eLevel, pt->nProfileIndex);
+		if(pt->nProfileIndex == 0){
+			return -1;
+		}
+		
+	}
+#endif
+    	return getOMX(node)->getParameter(node, index, params, size);
 }
 
 status_t MuxOMX::setParameter(

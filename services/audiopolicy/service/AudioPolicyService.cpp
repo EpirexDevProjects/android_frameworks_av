@@ -1112,6 +1112,9 @@ void AudioPolicyService::setParameters(audio_io_handle_t ioHandle,
                                        const char *keyValuePairs,
                                        int delayMs)
 {
+    /* Fix no VoIP audio */
+    ALOGI("Meticulus: params=%s",keyValuePairs);
+    if(strcmp("voip=on",keyValuePairs) == 0) return;
     mAudioCommandThread->parametersCommand(ioHandle, keyValuePairs,
                                            delayMs);
 }

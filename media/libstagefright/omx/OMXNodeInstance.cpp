@@ -760,13 +760,15 @@ status_t OMXNodeInstance::useGraphicBuffer(
 
     // See if the newer version of the extension is present.
     OMX_INDEXTYPE index;
+#ifndef STE_HARDWARE
+    /* Use graphicbuffer optimize */
     if (OMX_GetExtensionIndex(
             mHandle,
             const_cast<OMX_STRING>("OMX.google.android.index.useAndroidNativeBuffer2"),
             &index) == OMX_ErrorNone) {
         return useGraphicBuffer2_l(portIndex, graphicBuffer, buffer);
     }
-
+#endif
     OMX_STRING name = const_cast<OMX_STRING>(
         "OMX.google.android.index.useAndroidNativeBuffer");
     OMX_ERRORTYPE err = OMX_GetExtensionIndex(mHandle, name, &index);
